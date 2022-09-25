@@ -29,24 +29,31 @@ def create_new_otp(request: ReqPhone, db: Session = Depends(get_db)):
     cust = db.query(DbCustomer).filter(DbCustomer.cust_mobile == request.cust_mobile).first()
     otp_valid_datetime = datetime.now(pytz.timezone('Asia/Calcutta'))+ timedelta(minutes=1)
     # # datetime_object = otp_valid_date1time + timedelta(minutes=10)
-    if not cust:
-        new_cust = DbCustomer(
-                cust_mobile=request.cust_mobile,
-                otp_creation_datetime=datetime.now(pytz.timezone('Asia/Calcutta')),
-                otp_valid_time = otp_valid_datetime,
-                # otp_code = 111111,
-                otp_code = otpGenerate.otpcreate(),
-                cust_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),
-            )
-        db.add(new_cust)
-        db.commit()
-        return {'status': 'Success', 'details': 'new user Create and otp send'}
+    len= request.cust_mobile.__len__()    # type: ignore
+    if len == 10:
+        if not cust:
+            new_cust = DbCustomer(
+                    cust_mobile=request.cust_mobile,
+                    otp_creation_datetime=datetime.now(pytz.timezone('Asia/Calcutta')),
+                    otp_valid_time = otp_valid_datetime,
+                    otp_code = 111111,
+                    # otp_code = otpGenerate.otpcreate(),
+                    cust_registration_date_time=datetime.now(pytz.timezone('Asia/Calcutta')),
+                )
+            db.add(new_cust)
+            db.commit()
+            return {'status': 'Success', 'details': 'new user Create and otp send'}
+        else:
+            otp_code = 111111
+            # otp_code = otpGenerate.otpcreate()
+            db.query(DbCustomer).filter(DbCustomer.cust_mobile == request.cust_mobile).update({"otp_valid_time": f'{otp_valid_datetime}', "otp_creation_datetime": datetime.now(
+                                    pytz.timezone('Asia/Calcutta')), "otp_code": f'{otp_code}'}, synchronize_session='evaluate')
+            db.commit()
+        return {'status': 'Success', 'details': 'otp send'}
     else:
-        otp_code = otpGenerate.otpcreate()
-        db.query(DbCustomer).filter(DbCustomer.cust_mobile == request.cust_mobile).update({"otp_valid_time": f'{otp_valid_datetime}', "otp_creation_datetime": datetime.now(
-                                pytz.timezone('Asia/Calcutta')), "otp_code": f'{otp_code}'}, synchronize_session='evaluate')
-        db.commit()
-    return {'status': 'Success', 'details': 'otp send'}
+        return {'status': 'Failed', 'details': 'incorrect number'}
+
+    # return len
     # return  otp_valid_date1time
 
 def verify_otp(request: verifyOtp, db: Session = Depends(get_db)):
@@ -62,7 +69,7 @@ def verify_otp(request: verifyOtp, db: Session = Depends(get_db)):
         else:
             otp = otpVerify.otp_verify(request.otp_code,cust.otp_code)  # type: ignore
             if otp == "true":
-                db.query(DbCustomer).filter(DbCustomer.cust_mobile == request.cust_mobile).update({"otp_valid_time": f'{NULL}',"cust_phone_verified": f'{"verify"}', "otp_creation_datetime": f'{NULL}', "otp_code": f'{NULL}'}, synchronize_session='evaluate')
+                db.query(DbCustomer).filter(DbCustomer.cust_mobile == request.cust_mobile).update({"otp_valid_time": None,"cust_phone_verified": f'{"verify"}', "otp_creation_datetime": None, "otp_code": None}, synchronize_session='evaluate')
                 db.commit()
                 user = db.query(DbCustomer).filter(DbCustomer.cust_mobile == request.cust_mobile).first()
                 return user
@@ -71,7 +78,7 @@ def verify_otp(request: verifyOtp, db: Session = Depends(get_db)):
             else:
                 return {'status': 'Failed', 'details': 'worng otp'}
     else:
-        db.query(DbCustomer).filter(DbCustomer.cust_mobile == request.cust_mobile).update({"otp_valid_time": f'{NULL}',"cust_phone_verified": f'{"verify"}', "otp_creation_datetime": f'{NULL}', "otp_code": f'{NULL}'}, synchronize_session='evaluate')
+        db.query(DbCustomer).filter(DbCustomer.cust_mobile == request.cust_mobile).update({"otp_valid_time": None, "otp_creation_datetime": None, "otp_code": None}, synchronize_session='evaluate')
         db.commit()
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                                 detail=f"otp is not available")

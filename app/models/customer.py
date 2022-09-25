@@ -1,13 +1,13 @@
 from datetime import datetime
 from app.config.database import Base
-from sqlalchemy import Column, Integer, String, DateTime, Float, Text, Time
+from sqlalchemy import Column, Integer, String, DateTime, Float, Text, Time, true
 
 class DbCustomer(Base):
     __tablename__ = 'customer'
     cust_id = Column(Integer, primary_key=True, autoincrement=True)
-    otp_code = Column(String(255) , default=0, nullable=False)
-    otp_creation_datetime = Column(DateTime, nullable=False)
-    otp_valid_time = Column(DateTime, default=0, nullable=False)
+    otp_code = Column(String(255), nullable=True)
+    otp_creation_datetime = Column(DateTime, nullable=True)
+    otp_valid_time = Column(DateTime, nullable=True)
     cust_user_id = Column(String(255))
     cust_phone_verified = Column(String(255))
     cust_fname = Column(String(255))
