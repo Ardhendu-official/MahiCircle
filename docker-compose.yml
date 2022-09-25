@@ -1,0 +1,35 @@
+# docker-compose.yml
+
+version: '3.8'
+
+services:
+
+  mysql:
+    image: mysql
+    restart: always
+    ports:
+        - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: mahicircle
+      MYSQL_DATABASE: mahicircle
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: ./.env
+    depends_on:
+      - mysql
+    ports:
+      - 80:8000
+      - 443:8000
+
+volumes:
+  redis:
+  mysql:
